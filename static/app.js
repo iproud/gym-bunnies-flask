@@ -3,22 +3,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Global State ---
     let currentWorkout = null;
     let equipmentList = [];
+    let workoutFrequencyChart = null;
+    let equipmentUsageChart = null;
 
     // --- Tab-Switching Logic ---
     window.showTab = (tabName) => {
-        // Hide all content
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.add('hidden');
+        // Hide all panels
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.remove('active');
+            panel.classList.add('hidden');
         });
+        
         // Deactivate all buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        document.querySelectorAll('.tab-button').forEach(btn => {
             btn.classList.remove('active');
         });
         
-        // Show selected content
-        document.getElementById(tabName).classList.remove('hidden');
+        // Show selected panel
+        const panel = document.getElementById(`${tabName}-panel`);
+        if (panel) {
+            panel.classList.remove('hidden');
+            setTimeout(() => panel.classList.add('active'), 10);
+        }
+        
         // Activate selected button
-        document.querySelector(`.tab-btn[onclick="showTab('${tabName}')"]`).classList.add('active');
+        const button = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
+        if (button) {
+            button.classList.add('active');
+        }
 
         // Load content for the active tab
         if (tabName === 'equipment') {
@@ -65,23 +77,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             equipment.forEach(eq => {
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-lg shadow p-4';
+                card.className = 'card equipment-card card-interactive';
                 
                 const imgSrc = eq.image_base64 
                     ? `data:image/png;base64,${eq.image_base64}` 
                     : 'https://placehold.co/300x200/e2e8f0/cbd5e0?text=No+Image';
 
                 card.innerHTML = `
-                    <img src="${imgSrc}" alt="${eq.name}" class="w-full h-32 object-cover rounded-md mb-3">
-                    <h4 class="text-lg font-semibold">${eq.name}</h4>
-                    <p class="text-sm text-gray-600">${eq.type}</p>
-                    <p class="text-sm text-gray-500 mb-2">${eq.description || ''}</p>
-                    <span class="text-xs font-medium px-2 py-1 rounded-full ${eq.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-                        ${eq.is_active ? 'Active' : 'Inactive'}
+                    <img src="${imgSrc}" alt="${eq.name}" class="equipment-image">
+                    <h4 class="equipment-name">${eq.name}</h4>
+                    <p class="equipment-type">${eq.type}</p>
+                    <p class="text-sm text-gray-500 mb-3">${eq.description || ''}</p>
+                    <span class="badge ${eq.is_active ? 'badge-success' : 'badge-gray'}">
+                        ${eq.is_active ? '✓ Active' : '○ Inactive'}
                     </span>
-                    <div class="mt-4 flex space-x-2">
-                        <button class="edit-btn text-sm text-blue-600 hover:text-blue-800" data-id="${eq.id}">Edit</button>
-                        <button class="delete-btn text-sm text-red-600 hover:text-red-800" data-id="${eq.id}">Delete</button>
+                    <div class="equipment-actions">
+                        <button class="edit-btn btn btn-outline btn-sm" data-id="${eq.id}">
+                            <span>✏️</span>
+                            <span>Edit</span>
+                        </button>
+                        <button class="delete-btn btn btn-danger btn-sm" data-id="${eq.id}">
+                            <span>🗑️</span>
+                            <span>Delete</span>
+                        </button>
                     </div>
                 `;
                 equipmentListEl.appendChild(card);
@@ -383,24 +401,30 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        container.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                ${sets.map(set => `
-                    <div class="bg-white p-3 rounded border border-gray-200 flex justify-between items-center">
-                        <div>
-                            <span class="font-medium">Set ${set.set_num}:</span>
-                            <span class="ml-2">${set.reps_dist} reps</span>
-                            <span class="ml-2">${set.weight_time} kg</span>
-                        </div>
-                        <button onclick="deleteSet(${set.id})" class="text-red-600 hover:text-red-800">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        </button>
+        container.innerHTML = sets.map(set => `
+            <div class="set-item">
+                <div class="set-number">${set.set_num}</div>
+                <div class="set-data">
+                    <div class="set-value">
+                        <span class="set-label">Reps</span>
+                        <span class="set-number-value">${set.reps_dist}</span>
                     </div>
-                `).join('')}
+                    <div class="set-value">
+                        <span class="set-label">Weight</span>
+                        <span class="set-number-value">${set.weight_time}kg</span>
+                    </div>
+                    ${set.resistance > 0 ? `
+                        <div class="set-value">
+                            <span class="set-label">Resistance</span>
+                            <span class="set-number-value">${set.resistance}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <button onclick="deleteSet(${set.id})" class="btn btn-ghost btn-sm">
+                    <span>🗑️</span>
+                </button>
             </div>
-        `;
+        `).join('');
     };
 
     // Delete set
@@ -525,6 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const workouts = await response.json();
             updateDashboardStats(workouts);
             displayRecentWorkouts(workouts);
+            initializeCharts(workouts);
             
         } catch (error) {
             console.error('Error loading dashboard:', error);
@@ -565,6 +590,211 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="text-sm text-gray-500">${new Date(workout.date).toLocaleDateString()}</span>
             </div>
         `).join('');
+    };
+
+    // --- Chart Functions ---
+    const createWorkoutFrequencyChart = (workouts) => {
+        const ctx = document.getElementById('workout-frequency-chart');
+        if (!ctx) return;
+
+        // Generate last 12 weeks data
+        const weeks = [];
+        const workoutCounts = [];
+        const today = new Date();
+        
+        for (let i = 11; i >= 0; i--) {
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - (i * 7) - today.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            
+            weeks.push(`Week ${12 - i}`);
+            
+            const weekWorkouts = workouts.filter(w => {
+                const workoutDate = new Date(w.date);
+                return workoutDate >= weekStart && workoutDate <= weekEnd;
+            }).length;
+            
+            workoutCounts.push(weekWorkouts);
+        }
+
+        // Destroy existing chart if it exists
+        if (workoutFrequencyChart) {
+            workoutFrequencyChart.destroy();
+        }
+
+        workoutFrequencyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: weeks,
+                datasets: [{
+                    label: 'Workouts',
+                    data: workoutCounts,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: 'white',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+    };
+
+    const createEquipmentUsageChart = (workouts) => {
+        const ctx = document.getElementById('equipment-usage-chart');
+        if (!ctx) return;
+
+        // Count equipment usage
+        const equipmentCounts = {};
+        workouts.forEach(workout => {
+            const equipmentName = workout.equipment.name;
+            equipmentCounts[equipmentName] = (equipmentCounts[equipmentName] || 0) + 1;
+        });
+
+        const labels = Object.keys(equipmentCounts);
+        const data = Object.values(equipmentCounts);
+
+        if (labels.length === 0) {
+            return;
+        }
+
+        // Destroy existing chart if it exists
+        if (equipmentUsageChart) {
+            equipmentUsageChart.destroy();
+        }
+
+        equipmentUsageChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(147, 51, 234)',
+                        'rgb(34, 197, 94)',
+                        'rgb(251, 146, 60)',
+                        'rgb(239, 68, 68)',
+                        'rgb(236, 72, 153)',
+                        'rgb(14, 165, 233)',
+                        'rgb(168, 85, 247)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: 'white'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            },
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: {
+                            size: 14,
+                            weight: '600'
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    };
+
+    const initializeCharts = (workouts) => {
+        // Update chart containers to remove loading/empty states
+        const frequencyContainer = document.querySelector('.chart-container:nth-child(1) .chart-body');
+        const usageContainer = document.querySelector('.chart-container:nth-child(2) .chart-body');
+        
+        if (frequencyContainer) {
+            frequencyContainer.innerHTML = '<canvas id="workout-frequency-chart" height="300"></canvas>';
+        }
+        
+        if (usageContainer) {
+            if (workouts.length > 0) {
+                usageContainer.innerHTML = '<canvas id="equipment-usage-chart" height="300"></canvas>';
+                createEquipmentUsageChart(workouts);
+            } else {
+                usageContainer.innerHTML = `
+                    <div class="chart-empty">
+                        <div class="chart-empty-icon">📊</div>
+                        <h4 class="chart-empty-title">No data yet</h4>
+                        <p class="chart-empty-text">Start logging workouts to see your equipment usage patterns</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Create frequency chart
+        createWorkoutFrequencyChart(workouts);
     };
 
     // --- User Settings ---

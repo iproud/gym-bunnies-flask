@@ -4,241 +4,417 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gym Bunnies - Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-100 font-sans">
-    <nav class="bg-white shadow-md">
-        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-800">Gym Bunnies</h1>
-            <div>
-                <span class="text-gray-700 mr-4">Welcome, {{ user.first_name }}!</span>
-                <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Logout</a>
+<body class="bg-gray-50 font-sans">
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="container py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <span class="text-white font-bold text-xl">🏋️</span>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Gym Bunnies</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-600">
+                    <span class="font-medium">Welcome back,</span>
+                    <span class="font-semibold text-gray-900">{{ user.first_name }}!</span>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger btn-sm">Logout</a>
             </div>
         </div>
     </nav>
 
     <!-- Tab Navigation -->
-    <div class="container mx-auto px-6 py-4">
-        <div class="flex border-b">
-            <button class="tab-btn active" onclick="showTab('home')">Home</button>
-            <button class="tab-btn" onclick="showTab('workout')">Workout</button>
-            <button class="tab-btn" onclick="showTab('equipment')">Equipment</button>
-            <button class="tab-btn" onclick="showTab('settings')">User Settings</button>
+    <div class="container py-6">
+        <div class="tab-container">
+            <div class="tab-list">
+                <button class="tab-button active" onclick="showTab('home')" data-tab="home">
+                    <span class="flex items-center space-x-2">
+                        <span>🏠</span>
+                        <span>Dashboard</span>
+                    </span>
+                </button>
+                <button class="tab-button" onclick="showTab('workout')" data-tab="workout">
+                    <span class="flex items-center space-x-2">
+                        <span>💪</span>
+                        <span>Workout</span>
+                    </span>
+                </button>
+                <button class="tab-button" onclick="showTab('equipment')" data-tab="equipment">
+                    <span class="flex items-center space-x-2">
+                        <span>🏋️</span>
+                        <span>Equipment</span>
+                    </span>
+                </button>
+                <button class="tab-button" onclick="showTab('settings')" data-tab="settings">
+                    <span class="flex items-center space-x-2">
+                        <span>⚙️</span>
+                        <span>Settings</span>
+                    </span>
+                </button>
+            </div>
         </div>
 
         <!-- Tab Content -->
-        <div id="home" class="tab-content active p-6 bg-white rounded-b-md shadow">
-            <h2 class="text-xl font-semibold mb-4">Home Dashboard</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold text-blue-800">Total Workouts</h3>
-                    <p class="text-3xl font-bold text-blue-600" id="total-workouts">-</p>
+        <div class="tab-panel active" id="home-panel">
+            <div class="space-y-6">
+                <!-- Stats Grid -->
+                <div class="stats-grid stats-grid-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">🏋️</div>
+                        <div class="stat-value" id="total-workouts">-</div>
+                        <p class="stat-label">Total Workouts</p>
+                        <div class="stat-change positive" id="total-change">
+                            <span>↑</span>
+                            <span>This month</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-value" id="week-workouts">-</div>
+                        <p class="stat-label">This Week</p>
+                        <div class="stat-change neutral" id="week-change">
+                            <span>→</span>
+                            <span>On track</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-value" id="streak-days">-</div>
+                        <p class="stat-label">Current Streak</p>
+                        <div class="stat-change positive" id="streak-change">
+                            <span>↑</span>
+                            <span>Keep going!</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-green-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold text-green-800">This Week</h3>
-                    <p class="text-3xl font-bold text-green-600" id="week-workouts">-</p>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Workout Frequency Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Workout Frequency</h3>
+                            <p class="chart-subtitle">Last 12 weeks activity</p>
+                        </div>
+                        <div class="chart-body">
+                            <div class="chart-loading">
+                                <div class="spinner"></div>
+                                <p class="chart-loading-text">Loading chart data...</p>
+                            </div>
+                        </div>
+                        <div class="chart-footer">
+                            Track your consistency over time
+                        </div>
+                    </div>
+
+                    <!-- Equipment Usage Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Equipment Usage</h3>
+                            <p class="chart-subtitle">Most used equipment</p>
+                        </div>
+                        <div class="chart-body">
+                            <div class="chart-empty">
+                                <div class="chart-empty-icon">📊</div>
+                                <h4 class="chart-empty-title">No data yet</h4>
+                                <p class="chart-empty-text">Start logging workouts to see your equipment usage patterns</p>
+                            </div>
+                        </div>
+                        <div class="chart-footer">
+                            Your favorite equipment
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-purple-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold text-purple-800">Current Streak</h3>
-                    <p class="text-3xl font-bold text-purple-600" id="streak-days">-</p>
-                </div>
-            </div>
-            
-            <div class="mt-6">
-                <h3 class="text-lg font-semibold mb-3">Recent Workouts</h3>
-                <div id="recent-workouts" class="space-y-2">
-                    <p class="text-gray-500">Loading recent workouts...</p>
+
+                <!-- Recent Workouts -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Workouts</h3>
+                        <p class="card-subtitle">Your latest training sessions</p>
+                    </div>
+                    <div class="card-body">
+                        <div id="recent-workouts" class="space-y-3">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline btn-sm" onclick="showTab('workout')">View All Workouts</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div id="workout" class="tab-content hidden p-6 bg-white rounded-b-md shadow">
-            <!-- Active Workout Section -->
-            <div id="active-workout-section" class="mb-6 hidden">
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 class="text-lg font-semibold text-green-800 mb-2">Active Workout</h3>
-                    <div id="active-workout-info" class="mb-4">
-                        <!-- Active workout info will be injected here -->
+        <div class="tab-panel" id="workout-panel">
+            <div class="space-y-6">
+                <!-- Active Workout Alert -->
+                <div id="active-workout-section" class="hidden">
+                    <div class="alert alert-success">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">🏃‍♂️ Active Workout in Progress</h3>
+                                <div id="active-workout-info">
+                                    <!-- Active workout info will be injected here -->
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="completeWorkout()" class="btn btn-success">Complete Workout</button>
+                                <button onclick="abandonWorkout()" class="btn btn-danger">Abandon</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex space-x-2">
-                        <button onclick="completeWorkout()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Complete Workout</button>
-                        <button onclick="abandonWorkout()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Abandon Workout</button>
+                </div>
+
+                <!-- Start New Workout -->
+                <div id="start-workout-section" class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Start New Workout</h3>
+                        <p class="card-subtitle">Choose your equipment and begin tracking</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- Start New Workout Section -->
-            <div id="start-workout-section" class="mb-6">
-                <h2 class="text-xl font-semibold mb-4">Start New Workout</h2>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="mb-4">
-                        <label for="workout-equipment" class="block text-sm font-medium text-gray-700 mb-2">Select Equipment</label>
-                        <select id="workout-equipment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option value="">Choose equipment...</option>
-                        </select>
-                    </div>
-                    <button onclick="startWorkout()" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Start Workout</button>
-                </div>
-            </div>
-
-            <!-- Set Recording Section -->
-            <div id="set-recording-section" class="mb-6 hidden">
-                <h3 class="text-lg font-semibold mb-3">Record Sets</h3>
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <form id="set-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label for="set-reps" class="block text-sm font-medium text-gray-700">Reps/Distance</label>
-                            <input type="number" id="set-reps" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label for="set-weight" class="block text-sm font-medium text-gray-700">Weight/Time</label>
-                            <input type="number" id="set-weight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label for="set-resistance" class="block text-sm font-medium text-gray-700">Resistance</label>
-                            <input type="number" id="set-resistance" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        </div>
-                        <div class="flex items-end">
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Set</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Current Sets Display -->
-            <div id="current-sets-section" class="mb-6 hidden">
-                <h3 class="text-lg font-semibold mb-3">Current Sets</h3>
-                <div id="current-sets" class="bg-gray-50 rounded-lg p-4">
-                    <!-- Sets will be injected here -->
-                </div>
-            </div>
-
-            <!-- Workout History -->
-            <div>
-                <h3 class="text-lg font-semibold mb-3">Workout History</h3>
-                <div id="workout-history" class="space-y-3">
-                    <p class="text-gray-500">Loading workout history...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="equipment" class="tab-content hidden p-6 bg-white rounded-b-md shadow">
-            <h2 class="text-xl font-semibold mb-4">Gym Equipment</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Add/Edit Form -->
-                <div class="md:col-span-1 bg-gray-50 p-4 rounded-lg shadow">
-                    <h3 class="text-lg font-semibold mb-3" id="equipment-form-title">Add New Equipment</h3>
-                    <form id="equipment-form" class="space-y-4">
-                        <input type="hidden" id="equipment-id">
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-                            <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
-                            <select id="type" name="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="Strength">Strength</option>
-                                <option value="Cardio">Cardio</option>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="workout-equipment" class="form-label">Select Equipment</label>
+                            <select id="workout-equipment" class="form-select">
+                                <option value="">Choose equipment...</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea id="description" name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
-                        </div>
-                         <div>
-                            <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
-                            <input type="file" id="image" name="image" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" id="is_active" name="is_active" class="h-4 w-4 rounded border-gray-300 text-blue-600" checked>
-                            <label for="is_active" class="ml-2 block text-sm text-gray-900">Is Active</label>
-                        </div>
-                        <div class="flex space-x-2">
-                            <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
-                            <button type="button" id="clear-form-btn" class="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Clear</button>
-                        </div>
-                    </form>
+                        <button onclick="startWorkout()" class="btn btn-primary btn-lg">
+                            <span>🚀</span>
+                            <span>Start Workout</span>
+                        </button>
+                    </div>
                 </div>
-                <!-- Equipment List -->
-                <div class="md:col-span-2">
-                    <div id="equipment-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <!-- Equipment cards will be injected here by app.js -->
+
+                <!-- Set Recording -->
+                <div id="set-recording-section" class="card hidden">
+                    <div class="card-header">
+                        <h3 class="card-title">Record Sets</h3>
+                        <p class="card-subtitle">Track your performance in real-time</p>
+                    </div>
+                    <div class="card-body">
+                        <form id="set-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="form-group">
+                                <label for="set-reps" class="form-label">Reps/Distance</label>
+                                <input type="number" id="set-reps" step="0.1" class="form-input" placeholder="10" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="set-weight" class="form-label">Weight/Time</label>
+                                <input type="number" id="set-weight" class="form-input" placeholder="50" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="set-resistance" class="form-label">Resistance</label>
+                                <input type="number" id="set-resistance" class="form-input" placeholder="0">
+                            </div>
+                            <div class="form-group flex items-end">
+                                <button type="submit" class="btn btn-primary w-full">
+                                    <span>➕</span>
+                                    <span>Add Set</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Current Sets -->
+                <div id="current-sets-section" class="card hidden">
+                    <div class="card-header">
+                        <h3 class="card-title">Current Sets</h3>
+                        <p class="card-subtitle">Your performance so far</p>
+                    </div>
+                    <div class="card-body">
+                        <div id="current-sets" class="space-y-2">
+                            <!-- Sets will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Workout History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Workout History</h3>
+                        <p class="card-subtitle">Your training log</p>
+                    </div>
+                    <div class="card-body">
+                        <div id="workout-history" class="space-y-3">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="settings" class="tab-content hidden p-6 bg-white rounded-b-md shadow">
-            <h2 class="text-xl font-semibold mb-4">User Settings</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="tab-panel" id="equipment-panel">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Add/Edit Form -->
+                <div class="lg:col-span-1">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" id="equipment-form-title">Add New Equipment</h3>
+                            <p class="card-subtitle">Add gym equipment to your collection</p>
+                        </div>
+                        <div class="card-body">
+                            <form id="equipment-form" class="space-y-4">
+                                <input type="hidden" id="equipment-id">
+                                <div class="form-group">
+                                    <label for="name" class="form-label">Name</label>
+                                    <input type="text" id="name" name="name" class="form-input" placeholder="Bench Press" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="type" class="form-label">Type</label>
+                                    <select id="type" name="type" class="form-select">
+                                        <option value="Strength">💪 Strength</option>
+                                        <option value="Cardio">🏃 Cardio</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea id="description" name="description" rows="3" class="form-textarea" placeholder="Describe the equipment..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="image" class="form-label">Image</label>
+                                    <input type="file" id="image" name="image" class="form-input" accept="image/*">
+                                </div>
+                                <div class="form-group">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" id="is_active" name="is_active" class="form-checkbox" checked>
+                                        <span class="text-sm font-medium text-gray-700">Is Active</span>
+                                    </label>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button type="submit" class="btn btn-primary flex-1">
+                                        <span>💾</span>
+                                        <span>Save</span>
+                                    </button>
+                                    <button type="button" id="clear-form-btn" class="btn btn-ghost flex-1">
+                                        <span>🔄</span>
+                                        <span>Clear</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Equipment List -->
+                <div class="lg:col-span-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Equipment Collection</h3>
+                            <p class="card-subtitle">Manage your gym equipment</p>
+                        </div>
+                        <div class="card-body">
+                            <div id="equipment-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <!-- Equipment cards will be injected here by app.js -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="settings-panel">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Profile Information -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-3">Profile Information</h3>
-                    <form id="profile-form" class="space-y-4">
-                        <div>
-                            <label for="profile-first-name" class="block text-sm font-medium text-gray-700">First Name</label>
-                            <input type="text" id="profile-first-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label for="profile-last-name" class="block text-sm font-medium text-gray-700">Last Name</label>
-                            <input type="text" id="profile-last-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label for="profile-email" class="block text-sm font-medium text-gray-700">Email</label>
-                            <input type="email" id="profile-email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update Profile</button>
-                    </form>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">👤 Profile Information</h3>
+                        <p class="card-subtitle">Update your personal details</p>
+                    </div>
+                    <div class="card-body">
+                        <form id="profile-form" class="space-y-4">
+                            <div class="form-group">
+                                <label for="profile-first-name" class="form-label">First Name</label>
+                                <input type="text" id="profile-first-name" class="form-input" placeholder="John" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-last-name" class="form-label">Last Name</label>
+                                <input type="text" id="profile-last-name" class="form-input" placeholder="Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-email" class="form-label">Email Address</label>
+                                <input type="email" id="profile-email" class="form-input" placeholder="john.doe@example.com" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">
+                                <span>💾</span>
+                                <span>Update Profile</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Change Password -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold mb-3">Change Password</h3>
-                    <form id="password-form" class="space-y-4">
-                        <div>
-                            <label for="current-password" class="block text-sm font-medium text-gray-700">Current Password</label>
-                            <input type="password" id="current-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label for="new-password" class="block text-sm font-medium text-gray-700">New Password</label>
-                            <input type="password" id="new-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <div>
-                            <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                            <input type="password" id="confirm-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        </div>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Change Password</button>
-                    </form>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🔒 Change Password</h3>
+                        <p class="card-subtitle">Keep your account secure</p>
+                    </div>
+                    <div class="card-body">
+                        <form id="password-form" class="space-y-4">
+                            <div class="form-group">
+                                <label for="current-password" class="form-label">Current Password</label>
+                                <input type="password" id="current-password" class="form-input" placeholder="Enter current password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new-password" class="form-label">New Password</label>
+                                <input type="password" id="new-password" class="form-input" placeholder="Enter new password" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirm-password" class="form-label">Confirm New Password</label>
+                                <input type="password" id="confirm-password" class="form-input" placeholder="Confirm new password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full">
+                                <span>🔐</span>
+                                <span>Change Password</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Preferences -->
-                <div class="bg-gray-50 p-4 rounded-lg md:col-span-2">
-                    <h3 class="text-lg font-semibold mb-3">Preferences</h3>
-                    <form id="preferences-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="units" class="block text-sm font-medium text-gray-700">Units</label>
-                            <select id="units" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="metric">Metric (kg, km)</option>
-                                <option value="imperial">Imperial (lbs, miles)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="default-rest-time" class="block text-sm font-medium text-gray-700">Default Rest Time (seconds)</label>
-                            <input type="number" id="default-rest-time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" min="0" max="600">
-                        </div>
-                        <div>
-                            <label for="theme" class="block text-sm font-medium text-gray-700">Theme</label>
-                            <select id="theme" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                <option value="light">Light</option>
-                                <option value="dark">Dark</option>
-                            </select>
-                        </div>
-                        <div class="md:col-span-3">
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update Preferences</button>
-                        </div>
-                    </form>
+                <div class="card lg:col-span-2">
+                    <div class="card-header">
+                        <h3 class="card-title">⚙️ Preferences</h3>
+                        <p class="card-subtitle">Customize your experience</p>
+                    </div>
+                    <div class="card-body">
+                        <form id="preferences-form" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="form-group">
+                                <label for="units" class="form-label">📏 Units</label>
+                                <select id="units" class="form-select">
+                                    <option value="metric">🌍 Metric (kg, km)</option>
+                                    <option value="imperial">🇺🇸 Imperial (lbs, miles)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="default-rest-time" class="form-label">⏱️ Default Rest Time</label>
+                                <input type="number" id="default-rest-time" class="form-input" placeholder="60" min="0" max="600">
+                                <p class="text-xs text-gray-500 mt-1">Seconds between sets</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="theme" class="form-label">🎨 Theme</label>
+                                <select id="theme" class="form-select">
+                                    <option value="light">☀️ Light</option>
+                                    <option value="dark">🌙 Dark</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <button type="submit" class="btn btn-primary">
+                                    <span>🎯</span>
+                                    <span>Update Preferences</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
