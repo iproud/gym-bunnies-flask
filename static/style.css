@@ -1,0 +1,16 @@
+/* Basic styling for tabs */
+.tab-btn {
+    @apply px-4 py-2 text-gray-600 font-medium rounded-t-md hover:bg-gray-100 focus:outline-none;
+}
+
+.tab-btn.active {
+    @apply bg-white text-blue-600 border-b-2 border-blue-600 -mb-px;
+}
+
+.tab-content {
+    @apply bg-white rounded-b-md shadow;
+}
+
+.tab-content.hidden {
+    display: none;
+}

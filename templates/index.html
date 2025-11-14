@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym Bunnies - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="bg-white shadow-md">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Gym Bunnies</h1>
+            <div>
+                <span class="text-gray-700 mr-4">Welcome, {{ user.first_name }}!</span>
+                <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tab Navigation -->
+    <div class="container mx-auto px-6 py-4">
+        <div class="flex border-b">
+            <button class="tab-btn active" onclick="showTab('home')">Home</button>
+            <button class="tab-btn" onclick="showTab('workout')">Workout</button>
+            <button class="tab-btn" onclick="showTab('equipment')">Equipment</button>
+            <button class="tab-btn" onclick="showTab('settings')">User Settings</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="home" class="tab-content active p-6 bg-white rounded-b-md shadow">
+            <h2 class="text-xl font-semibold mb-4">Home Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-800">Total Workouts</h3>
+                    <p class="text-3xl font-bold text-blue-600" id="total-workouts">-</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-green-800">This Week</h3>
+                    <p class="text-3xl font-bold text-green-600" id="week-workouts">-</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-purple-800">Current Streak</h3>
+                    <p class="text-3xl font-bold text-purple-600" id="streak-days">-</p>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold mb-3">Recent Workouts</h3>
+                <div id="recent-workouts" class="space-y-2">
+                    <p class="text-gray-500">Loading recent workouts...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="workout" class="tab-content hidden p-6 bg-white rounded-b-md shadow">
+            <!-- Active Workout Section -->
+            <div id="active-workout-section" class="mb-6 hidden">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h3 class="text-lg font-semibold text-green-800 mb-2">Active Workout</h3>
+                    <div id="active-workout-info" class="mb-4">
+                        <!-- Active workout info will be injected here -->
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="completeWorkout()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Complete Workout</button>
+                        <button onclick="abandonWorkout()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Abandon Workout</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start New Workout Section -->
+            <div id="start-workout-section" class="mb-6">
+                <h2 class="text-xl font-semibold mb-4">Start New Workout</h2>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="mb-4">
+                        <label for="workout-equipment" class="block text-sm font-medium text-gray-700 mb-2">Select Equipment</label>
+                        <select id="workout-equipment" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="">Choose equipment...</option>
+                        </select>
+                    </div>
+                    <button onclick="startWorkout()" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Start Workout</button>
+                </div>
+            </div>
+
+            <!-- Set Recording Section -->
+            <div id="set-recording-section" class="mb-6 hidden">
+                <h3 class="text-lg font-semibold mb-3">Record Sets</h3>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <form id="set-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label for="set-reps" class="block text-sm font-medium text-gray-700">Reps/Distance</label>
+                            <input type="number" id="set-reps" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="set-weight" class="block text-sm font-medium text-gray-700">Weight/Time</label>
+                            <input type="number" id="set-weight" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="set-resistance" class="block text-sm font-medium text-gray-700">Resistance</label>
+                            <input type="number" id="set-resistance" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Set</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Current Sets Display -->
+            <div id="current-sets-section" class="mb-6 hidden">
+                <h3 class="text-lg font-semibold mb-3">Current Sets</h3>
+                <div id="current-sets" class="bg-gray-50 rounded-lg p-4">
+                    <!-- Sets will be injected here -->
+                </div>
+            </div>
+
+            <!-- Workout History -->
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Workout History</h3>
+                <div id="workout-history" class="space-y-3">
+                    <p class="text-gray-500">Loading workout history...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="equipment" class="tab-content hidden p-6 bg-white rounded-b-md shadow">
+            <h2 class="text-xl font-semibold mb-4">Gym Equipment</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Add/Edit Form -->
+                <div class="md:col-span-1 bg-gray-50 p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-3" id="equipment-form-title">Add New Equipment</h3>
+                    <form id="equipment-form" class="space-y-4">
+                        <input type="hidden" id="equipment-id">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+                            <input type="text" id="name" name="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="type" class="block text-sm font-medium text-gray-700">Type</label>
+                            <select id="type" name="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="Strength">Strength</option>
+                                <option value="Cardio">Cardio</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea id="description" name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                        </div>
+                         <div>
+                            <label for="image" class="block text-sm font-medium text-gray-700">Image</label>
+                            <input type="file" id="image" name="image" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="is_active" name="is_active" class="h-4 w-4 rounded border-gray-300 text-blue-600" checked>
+                            <label for="is_active" class="ml-2 block text-sm text-gray-900">Is Active</label>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save</button>
+                            <button type="button" id="clear-form-btn" class="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Clear</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- Equipment List -->
+                <div class="md:col-span-2">
+                    <div id="equipment-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Equipment cards will be injected here by app.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings" class="tab-content hidden p-6 bg-white rounded-b-md shadow">
+            <h2 class="text-xl font-semibold mb-4">User Settings</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Profile Information -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">Profile Information</h3>
+                    <form id="profile-form" class="space-y-4">
+                        <div>
+                            <label for="profile-first-name" class="block text-sm font-medium text-gray-700">First Name</label>
+                            <input type="text" id="profile-first-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="profile-last-name" class="block text-sm font-medium text-gray-700">Last Name</label>
+                            <input type="text" id="profile-last-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="profile-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="profile-email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update Profile</button>
+                    </form>
+                </div>
+
+                <!-- Change Password -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-3">Change Password</h3>
+                    <form id="password-form" class="space-y-4">
+                        <div>
+                            <label for="current-password" class="block text-sm font-medium text-gray-700">Current Password</label>
+                            <input type="password" id="current-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="new-password" class="block text-sm font-medium text-gray-700">New Password</label>
+                            <input type="password" id="new-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                            <input type="password" id="confirm-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        </div>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Change Password</button>
+                    </form>
+                </div>
+
+                <!-- Preferences -->
+                <div class="bg-gray-50 p-4 rounded-lg md:col-span-2">
+                    <h3 class="text-lg font-semibold mb-3">Preferences</h3>
+                    <form id="preferences-form" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="units" class="block text-sm font-medium text-gray-700">Units</label>
+                            <select id="units" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="metric">Metric (kg, km)</option>
+                                <option value="imperial">Imperial (lbs, miles)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="default-rest-time" class="block text-sm font-medium text-gray-700">Default Rest Time (seconds)</label>
+                            <input type="number" id="default-rest-time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" min="0" max="600">
+                        </div>
+                        <div>
+                            <label for="theme" class="block text-sm font-medium text-gray-700">Theme</label>
+                            <select id="theme" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-3">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Update Preferences</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
